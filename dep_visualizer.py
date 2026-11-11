@@ -17,6 +17,7 @@ def get_args():
     parser.add_argument("-o", "--output", default="graph.png")
     parser.add_argument("-a", "--ascii-tree", action="store_true")
     parser.add_argument("-d", "--max-depth", type=int, default=3)
+    parser.add_argument("-l", "--load-order", action="store_true")
     return parser.parse_args()
 
 
@@ -137,6 +138,35 @@ def build_graph(root, max_depth, is_test, url, test_repo=None):
     return graph
 
 
+def calc_load_order(graph, root):
+    order = []
+    visited = set()
+    in_stack = set()
+    stack = [(root, False)]
+
+    while stack:
+        node, done = stack.pop()
+
+        if done:
+            in_stack.discard(node)
+            if node not in visited:
+                visited.add(node)
+                order.append(node)
+            continue
+
+        if node in visited or node in in_stack:
+            continue
+
+        in_stack.add(node)
+        stack.append((node, True))
+
+        for dep in reversed(graph.get(node, [])):
+            if dep not in visited and dep not in in_stack:
+                stack.append((dep, False))
+
+    return order
+
+
 def main():
     try:
         args = get_args()
@@ -156,9 +186,11 @@ def main():
     graph = build_graph(
         args.package, args.max_depth, args.test_mode, args.url, test_repo
     )
-    print("Граф зависимостей:")
-    for k, v in graph.items():
-        print(f"{k} -> {v}")
+
+    if args.load_order:
+        print("Порядок загрузки:")
+        order = calc_load_order(graph, args.package)
+        print(" -> ".join(order))
 
 
 if __name__ == "__main__":
