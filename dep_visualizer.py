@@ -1,6 +1,9 @@
 import argparse
+import json
 import os
 import sys
+import urllib.error
+import urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
@@ -41,6 +44,37 @@ def check_args(args):
             raise ValueError("Некорректный URL репозитория")
 
 
+def get_npm_deps(pkg, base_url):
+    base_url = base_url.rstrip("/")
+    url = f"{base_url}/{pkg}/latest"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return list(data.get("dependencies", {}).keys())
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            try:
+                with urllib.request.urlopen(
+                    f"{base_url}/{pkg}", timeout=10
+                ) as resp:
+                    full = json.loads(resp.read().decode("utf-8"))
+                    ver = full.get("dist-tags", {}).get("latest")
+                    if ver:
+                        deps = (
+                            full.get("versions", {})
+                            .get(ver, {})
+                            .get("dependencies", {})
+                        )
+                        return list(deps.keys())
+            except Exception:
+                pass
+            raise RuntimeError(f"Пакет {pkg} не найден")
+        raise RuntimeError(f"Ошибка HTTP: {e.code}")
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Ошибка сети: {e.reason}")
+
+
 def main():
     try:
         args = get_args()
@@ -49,9 +83,17 @@ def main():
         print(f"Ошибка: {e}", file=sys.stderr)
         sys.exit(1)
 
-    print("Параметры:")
-    for k, v in vars(args).items():
-        print(f"{k} = {v}")
+    try:
+        deps = get_npm_deps(args.package, args.url)
+        print(f"Прямые зависимости {args.package}:")
+        if deps:
+            for d in deps:
+                print(f"- {d}")
+        else:
+            print("нет")
+    except Exception as e:
+        print(f"Ошибка: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
