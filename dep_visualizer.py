@@ -44,6 +44,30 @@ def check_args(args):
             raise ValueError("Некорректный URL репозитория")
 
 
+def read_test_repo(path):
+    repo = {}
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read().strip()
+        if text.startswith("{"):
+            data = json.loads(text)
+            for k, v in data.items():
+                if not k.isupper() or not k.isalpha():
+                    raise ValueError(f"Неверное имя пакета в файле: {k}")
+                repo[k] = list(v)
+        else:
+            for line in text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                if ":" not in line:
+                    raise ValueError(f"Ошибка в строке: {line}")
+                pkg, deps = line.split(":", 1)
+                repo[pkg.strip()] = [
+                    x.strip() for x in deps.split(",") if x.strip()
+                ]
+    return repo
+
+
 def get_npm_deps(pkg, base_url):
     base_url = base_url.rstrip("/")
     url = f"{base_url}/{pkg}/latest"
@@ -75,6 +99,44 @@ def get_npm_deps(pkg, base_url):
         raise RuntimeError(f"Ошибка сети: {e.reason}")
 
 
+def build_graph(root, max_depth, is_test, url, test_repo=None):
+    graph = {}
+    stack = [(root, 0)]
+    visited = {}
+
+    while stack:
+        pkg, depth = stack.pop()
+
+        if pkg in visited and visited[pkg] <= depth:
+            continue
+        visited[pkg] = depth
+
+        if depth >= max_depth:
+            if pkg not in graph:
+                graph[pkg] = []
+            continue
+
+        if pkg not in graph:
+            if is_test:
+                deps = test_repo.get(pkg, [])
+            else:
+                try:
+                    deps = get_npm_deps(pkg, url)
+                except Exception as e:
+                    print(f"Ошибка для {pkg}: {e}", file=sys.stderr)
+                    deps = []
+            graph[pkg] = deps
+        else:
+            deps = graph[pkg]
+
+        for d in reversed(deps):
+            if d not in graph:
+                graph[d] = []
+            stack.append((d, depth + 1))
+
+    return graph
+
+
 def main():
     try:
         args = get_args()
@@ -83,17 +145,20 @@ def main():
         print(f"Ошибка: {e}", file=sys.stderr)
         sys.exit(1)
 
-    try:
-        deps = get_npm_deps(args.package, args.url)
-        print(f"Прямые зависимости {args.package}:")
-        if deps:
-            for d in deps:
-                print(f"- {d}")
-        else:
-            print("нет")
-    except Exception as e:
-        print(f"Ошибка: {e}", file=sys.stderr)
-        sys.exit(1)
+    test_repo = None
+    if args.test_mode:
+        try:
+            test_repo = read_test_repo(args.url)
+        except Exception as e:
+            print(f"Ошибка чтения файла: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    graph = build_graph(
+        args.package, args.max_depth, args.test_mode, args.url, test_repo
+    )
+    print("Граф зависимостей:")
+    for k, v in graph.items():
+        print(f"{k} -> {v}")
 
 
 if __name__ == "__main__":
