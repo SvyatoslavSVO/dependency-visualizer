@@ -1,8 +1,10 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -167,6 +169,79 @@ def calc_load_order(graph, root):
     return order
 
 
+def show_tree(graph, root, max_depth):
+    print("\nДерево зависимостей:")
+    stack = [(root, "", True, 0, set())]
+
+    while stack:
+        node, pref, is_last, depth, path = stack.pop()
+
+        if depth == 0:
+            print(node)
+        else:
+            branch = "└── " if is_last else "├── "
+            if node in path:
+                print(f"{pref}{branch}{node} (цикл)")
+                continue
+            print(f"{pref}{branch}{node}")
+
+        if depth >= max_depth:
+            continue
+
+        children = graph.get(node, [])
+        new_path = path | {node}
+        new_pref = pref + ("" if depth == 0 else ("    " if is_last else "│   "))
+
+        for i in range(len(children) - 1, -1, -1):
+            stack.append((
+                children[i],
+                new_pref,
+                i == len(children) - 1,
+                depth + 1,
+                new_path,
+            ))
+
+
+def make_graphviz(graph, out_file):
+    lines = ["digraph G {"]
+    for pkg, deps in graph.items():
+        lines.append(f'    "{pkg}";')
+        for d in deps:
+            lines.append(f'    "{pkg}" -> "{d}";')
+    lines.append("}")
+    dot_text = "\n".join(lines)
+
+    dot_file = os.path.splitext(out_file)[0] + ".dot"
+    with open(dot_file, "w", encoding="utf-8") as f:
+        f.write(dot_text)
+
+    try:
+        subprocess.run(
+            ["dot", "-Tpng", dot_file, "-o", out_file],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        print(f"\nГраф сохранен в {out_file}")
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        try:
+            params = urllib.parse.urlencode(
+                {"graph": dot_text, "format": "png"}
+            )
+            url = f"https://quickchart.io/graphviz?{params}"
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "Mozilla/5.0"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                with open(out_file, "wb") as img:
+                    img.write(resp.read())
+            print(f"\nГраф сохранен в {out_file}")
+        except Exception:
+            pass
+
+    return dot_text
+
+
 def main():
     try:
         args = get_args()
@@ -188,9 +263,16 @@ def main():
     )
 
     if args.load_order:
-        print("Порядок загрузки:")
+        print("\nПорядок загрузки:")
         order = calc_load_order(graph, args.package)
         print(" -> ".join(order))
+
+    if args.ascii_tree:
+        show_tree(graph, args.package, args.max_depth)
+
+    dot_code = make_graphviz(graph, args.output)
+    print("\nКод Graphviz:")
+    print(dot_code)
 
 
 if __name__ == "__main__":

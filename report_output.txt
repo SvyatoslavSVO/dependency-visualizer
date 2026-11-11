@@ -1,0 +1,259 @@
+ЭТАП 1
+
+--- Вывод параметров ---
+Команда: python dep_visualizer.py -p A -u test_diamond.json -t -o stage1.png -d 2
+Граф сохранен в stage1.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "C";
+    "B";
+}
+
+--- Ошибка: пустое имя ---
+Команда: python dep_visualizer.py -p   -u https://registry.npmjs.org
+Ошибка: Пустое имя пакета
+
+--- Ошибка: неверный URL ---
+Команда: python dep_visualizer.py -p express -u ftp://registry.npmjs.org
+Ошибка: Некорректный URL репозитория
+
+--- Ошибка: нет файла ---
+Команда: python dep_visualizer.py -p A -u missing.json -t
+Ошибка: Файл не найден: missing.json
+
+--- Ошибка: имя пакета в тесте ---
+Команда: python dep_visualizer.py -p pkg1 -u test_diamond.json -t
+Ошибка: Для тестов имя пакета должно быть из заглавных латинских букв
+
+--- Ошибка: глубина < 0 ---
+Команда: python dep_visualizer.py -p A -u test_diamond.json -t -d -1
+Ошибка: Глубина не может быть меньше 0
+
+--- Ошибка: формат файла ---
+Команда: python dep_visualizer.py -p A -u test_diamond.json -t -o out.jpg
+Ошибка: Файл должен быть в формате .png
+
+ЭТАП 2
+
+--- Прямые зависимости body-parser ---
+Команда: python dep_visualizer.py -p body-parser -u https://registry.npmjs.org -d 1 -o bp.png
+Граф сохранен в bp.png
+
+Код Graphviz:
+digraph G {
+    "body-parser";
+    "body-parser" -> "qs";
+    "body-parser" -> "bytes";
+    "body-parser" -> "debug";
+    "body-parser" -> "type-is";
+    "body-parser" -> "raw-body";
+    "body-parser" -> "iconv-lite";
+    "body-parser" -> "http-errors";
+    "body-parser" -> "on-finished";
+    "body-parser" -> "content-type";
+    "content-type";
+    "on-finished";
+    "http-errors";
+    "iconv-lite";
+    "raw-body";
+    "type-is";
+    "debug";
+    "bytes";
+    "qs";
+}
+
+ЭТАП 3
+
+--- Линейный граф (глубина 3) ---
+Команда: python dep_visualizer.py -p A -u test_linear.json -t -d 3 -a -o linear.png
+Дерево зависимостей:
+A
+└── B
+
+Граф сохранен в linear.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "B";
+}
+
+--- Ромбовидный граф ---
+Команда: python dep_visualizer.py -p A -u test_diamond.json -t -d 5 -a -o diamond.png
+Дерево зависимостей:
+A
+├── B
+└── C
+
+Граф сохранен в diamond.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "C";
+    "B";
+}
+
+--- Граф с циклами ---
+Команда: python dep_visualizer.py -p A -u test_cycles.json -t -d 6 -a -o cycles.png
+Дерево зависимостей:
+A
+├── B
+└── C
+
+Граф сохранен в cycles.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "C";
+    "B";
+}
+
+ЭТАП 4
+
+--- Порядок загрузки (ромб) ---
+Команда: python dep_visualizer.py -p A -u test_diamond.json -t -d 5 -l -o ord1.png
+Порядок загрузки:
+B -> C -> A
+
+Граф сохранен в ord1.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "C";
+    "B";
+}
+
+--- Порядок загрузки (текстовый репо) ---
+Команда: python dep_visualizer.py -p A -u test_complex.txt -t -d 5 -l -o ord2.png
+Порядок загрузки:
+B -> C -> D -> A
+
+Граф сохранен в ord2.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "A" -> "D";
+    "D";
+    "C";
+    "B";
+}
+
+--- Порядок загрузки (циклы) ---
+Команда: python dep_visualizer.py -p A -u test_cycles.json -t -d 5 -l -o ord3.png
+Порядок загрузки:
+B -> C -> A
+
+Граф сохранен в ord3.png
+
+Код Graphviz:
+digraph G {
+    "A";
+    "A" -> "B";
+    "A" -> "C";
+    "C";
+    "B";
+}
+
+ЭТАП 5
+
+--- Пакет cookie-signature ---
+Команда: python dep_visualizer.py -p cookie-signature -u https://registry.npmjs.org -d 2 -a -o pkg1.png
+Дерево зависимостей:
+cookie-signature
+
+Граф сохранен в pkg1.png
+
+Код Graphviz:
+digraph G {
+    "cookie-signature";
+}
+
+--- Пакет http-errors ---
+Команда: python dep_visualizer.py -p http-errors -u https://registry.npmjs.org -d 2 -a -o pkg2.png
+Дерево зависимостей:
+http-errors
+├── depd
+├── inherits
+├── statuses
+├── toidentifier
+└── setprototypeof
+
+Граф сохранен в pkg2.png
+
+Код Graphviz:
+digraph G {
+    "http-errors";
+    "http-errors" -> "depd";
+    "http-errors" -> "inherits";
+    "http-errors" -> "statuses";
+    "http-errors" -> "toidentifier";
+    "http-errors" -> "setprototypeof";
+    "setprototypeof";
+    "toidentifier";
+    "statuses";
+    "inherits";
+    "depd";
+}
+
+--- Пакет send ---
+Команда: python dep_visualizer.py -p send -u https://registry.npmjs.org -d 2 -a -o pkg3.png
+Дерево зависимостей:
+send
+├── ms
+├── etag
+├── debug
+├── fresh
+├── statuses
+├── encodeurl
+├── mime-types
+├── escape-html
+├── http-errors
+├── on-finished
+└── range-parser
+
+Граф сохранен в pkg3.png
+
+Код Graphviz:
+digraph G {
+    "send";
+    "send" -> "ms";
+    "send" -> "etag";
+    "send" -> "debug";
+    "send" -> "fresh";
+    "send" -> "statuses";
+    "send" -> "encodeurl";
+    "send" -> "mime-types";
+    "send" -> "escape-html";
+    "send" -> "http-errors";
+    "send" -> "on-finished";
+    "send" -> "range-parser";
+    "range-parser";
+    "on-finished";
+    "http-errors";
+    "escape-html";
+    "mime-types";
+    "encodeurl";
+    "statuses";
+    "fresh";
+    "debug";
+    "etag";
+    "ms";
+}
+

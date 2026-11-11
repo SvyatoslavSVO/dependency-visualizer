@@ -1,0 +1,13 @@
+digraph G {
+    "http-errors";
+    "http-errors" -> "depd";
+    "http-errors" -> "inherits";
+    "http-errors" -> "statuses";
+    "http-errors" -> "toidentifier";
+    "http-errors" -> "setprototypeof";
+    "setprototypeof";
+    "toidentifier";
+    "statuses";
+    "inherits";
+    "depd";
+}

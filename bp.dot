@@ -1,0 +1,21 @@
+digraph G {
+    "body-parser";
+    "body-parser" -> "qs";
+    "body-parser" -> "bytes";
+    "body-parser" -> "debug";
+    "body-parser" -> "type-is";
+    "body-parser" -> "raw-body";
+    "body-parser" -> "iconv-lite";
+    "body-parser" -> "http-errors";
+    "body-parser" -> "on-finished";
+    "body-parser" -> "content-type";
+    "content-type";
+    "on-finished";
+    "http-errors";
+    "iconv-lite";
+    "raw-body";
+    "type-is";
+    "debug";
+    "bytes";
+    "qs";
+}
