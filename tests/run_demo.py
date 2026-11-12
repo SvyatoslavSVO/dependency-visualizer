@@ -1,4 +1,4 @@
-﻿import os
+import os
 import subprocess
 import sys
 
@@ -34,17 +34,17 @@ def run_case(log_file, title, args):
 
 def run_stage_1_and_2(log):
     t_lin = os.path.join(TESTS_DIR, "test_linear.json")
-    a1 = ["-p", "A", "-u", t_lin, "-t", "-o", "stage1.png"]
-    run_case(log, "Этап 1: Базовый запуск", a1)
+    args1 = ["-p", "A", "-u", t_lin, "-t", "-o", "stage1.png"]
+    run_case(log, "Этап 1: Базовый запуск", args1)
 
-    a2 = ["-p", "A", "-u", t_lin, "-t", "-d", "-1"]
-    run_case(log, "Этап 1: Ошибка глубины", a2)
+    args2 = ["-p", "A", "-u", t_lin, "-t", "-d", "-1"]
+    run_case(log, "Этап 1: Ошибка глубины", args2)
 
-    a3 = ["-p", "pkg1", "-u", t_lin, "-t"]
-    run_case(log, "Этап 1: Ошибка имени", a3)
+    args3 = ["-p", "pkg1", "-u", t_lin, "-t"]
+    run_case(log, "Этап 1: Ошибка имени", args3)
 
-    a4 = ["-p", "express", "-u", NPM_URL, "-d", "1", "-o", "p1.png"]
-    run_case(log, "Этап 2: Пакет express", a4)
+    args4 = ["-p", "express", "-u", NPM_URL, "-d", "1", "-o", "pkg1.png"]
+    run_case(log, "Этап 2: Пакет express", args4)
 
 
 def run_stage_3(log):
@@ -52,31 +52,31 @@ def run_stage_3(log):
     t_dia = os.path.join(TESTS_DIR, "test_diamond.json")
     t_cyc = os.path.join(TESTS_DIR, "test_cycles.json")
 
-    a1 = ["-p", "A", "-u", t_lin, "-t", "-d", "4", "-a", "-o", "l.png"]
-    run_case(log, "Этап 3: Линейный граф", a1)
+    args1 = ["-p", "A", "-u", t_lin, "-t", "-d", "4", "-a", "-o", "lin.png"]
+    run_case(log, "Этап 3: Линейный граф", args1)
 
-    a2 = ["-p", "A", "-u", t_dia, "-t", "-d", "3", "-a", "-o", "d.png"]
-    run_case(log, "Этап 3: Ромбовидный граф", a2)
+    args2 = ["-p", "A", "-u", t_dia, "-t", "-d", "3", "-a", "-o", "dia.png"]
+    run_case(log, "Этап 3: Ромбовидный граф", args2)
 
-    a3 = ["-p", "A", "-u", t_cyc, "-t", "-d", "5", "-a", "-o", "c.png"]
-    run_case(log, "Этап 3: Граф с циклами", a3)
+    args3 = ["-p", "A", "-u", t_cyc, "-t", "-d", "5", "-a", "-o", "cyc.png"]
+    run_case(log, "Этап 3: Граф с циклами", args3)
 
 
 def run_stage_4_and_5(log):
     t_dia = os.path.join(TESTS_DIR, "test_diamond.json")
     t_cpx = os.path.join(TESTS_DIR, "test_complex.txt")
 
-    a1 = ["-p", "A", "-u", t_dia, "-t", "-l", "-o", "ord1.png"]
-    run_case(log, "Этап 4: Порядок загрузки (ромб)", a1)
+    args1 = ["-p", "A", "-u", t_dia, "-t", "-l", "-o", "ord1.png"]
+    run_case(log, "Этап 4: Порядок загрузки (ромб)", args1)
 
-    a2 = ["-p", "A", "-u", t_cpx, "-t", "-l", "-a", "-o", "ord2.png"]
-    run_case(log, "Этап 4: Порядок загрузки (сложный)", a2)
+    args2 = ["-p", "A", "-u", t_cpx, "-t", "-l", "-a", "-o", "ord2.png"]
+    run_case(log, "Этап 4: Порядок загрузки (сложный)", args2)
 
-    a3 = [
+    args3 = [
         "-p", "body-parser", "-u", NPM_URL,
         "-d", "2", "-a", "-l", "-o", "bp.png",
     ]
-    run_case(log, "Этап 5: Визуализация body-parser", a3)
+    run_case(log, "Этап 5: Визуализация body-parser", args3)
 
 
 def main():
@@ -84,8 +84,7 @@ def main():
         run_stage_1_and_2(log)
         run_stage_3(log)
         run_stage_4_and_5(log)
-    print(f"\nВсе тесты завершены. Отчет: {REPORT_FILE}")
-
-
+    print(f"\nВсе тесты завершены. Отчет сохранен в {REPORT_FILE}")
+    
 if __name__ == "__main__":
     main()
