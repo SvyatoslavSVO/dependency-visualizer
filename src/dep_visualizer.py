@@ -25,7 +25,9 @@ def get_args():
     parser.add_argument("-t", "--test-mode", action="store_true")
     parser.add_argument("-o", "--output", default="graph.png")
     parser.add_argument("-a", "--ascii-tree", action="store_true")
-    parser.add_argument("-d", "--max-depth", type=int, default=DEFAULT_DEPTH)
+    parser.add_argument(
+        "-d", "--max-depth", type=int, default=DEFAULT_DEPTH
+    )
     parser.add_argument("-l", "--load-order", action="store_true")
     return parser.parse_args()
 
@@ -214,20 +216,28 @@ def push_tree_children(stack, children, new_pref, next_depth, new_path):
         stack.append(item)
 
 
+def get_tree_pad(depth, is_last):
+    if depth == ROOT_DEPTH:
+        return ""
+    return "    " if is_last else "│   "
+
+
 def show_tree(graph, root, max_depth):
     print("\nДерево зависимостей:")
     stack = [(root, "", True, ROOT_DEPTH, set())]
 
     while stack:
         node, pref, is_last, depth, path = stack.pop()
-        is_cycle = format_tree_node(node, pref, is_last, depth, node in path)
+        in_path = node in path
+        is_cycle = format_tree_node(node, pref, is_last, depth, in_path)
         if is_cycle or depth >= max_depth:
             continue
 
         children = graph.get(node, [])
         new_path = path | {node}
-        pad = "" if depth == ROOT_DEPTH else ("    " if is_last else "│   ")
-        push_tree_children(stack, children, pref + pad, depth + STEP, new_path)
+        pad = get_tree_pad(depth, is_last)
+        next_depth = depth + STEP
+        push_tree_children(stack, children, pref + pad, next_depth, new_path)
 
 
 def build_dot_text(graph):
@@ -242,7 +252,8 @@ def build_dot_text(graph):
 
 def render_remote_png(dot_text, out_file):
     try:
-        params = urllib.parse.urlencode({"graph": dot_text, "format": "png"})
+        query = {"graph": dot_text, "format": "png"}
+        params = urllib.parse.urlencode(query)
         url = f"https://quickchart.io/graphviz?{params}"
         headers = {"User-Agent": "Mozilla/5.0"}
         req = urllib.request.Request(url, headers=headers)
