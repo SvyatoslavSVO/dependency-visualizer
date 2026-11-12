@@ -78,7 +78,6 @@ def run_stage_4_and_5(log):
     ]
     run_case(log, "Этап 5: Визуализация body-parser", args3)
 
-
 def main():
     with open(REPORT_FILE, "w", encoding="utf-8") as log:
         run_stage_1_and_2(log)
